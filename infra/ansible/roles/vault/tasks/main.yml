@@ -39,6 +39,10 @@
     --set injector.enabled=true
     --set injector.resources.requests.memory=32Mi
     --set injector.resources.limits.memory=128Mi
+  register: vault_helm_res
+  until: vault_helm_res.rc == 0
+  retries: 3
+  delay: 10
   environment:
     KUBECONFIG: /home/ec2-user/.kube/config
   changed_when: true

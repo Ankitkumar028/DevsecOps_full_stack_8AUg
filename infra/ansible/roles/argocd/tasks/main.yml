@@ -37,6 +37,10 @@
     --set applicationSet.resources.limits.memory=128Mi
     --set dex.enabled=false
     --set notifications.enabled=false
+  register: helm_res
+  until: helm_res.rc == 0
+  retries: 3
+  delay: 10
   environment:
     KUBECONFIG: /home/ec2-user/.kube/config
   changed_when: true
