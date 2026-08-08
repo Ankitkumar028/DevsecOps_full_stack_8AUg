@@ -168,6 +168,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
   rule {
     id     = "expire-old-versions"
     status = "Enabled"
+    filter {}   # required by AWS provider v5+
     noncurrent_version_expiration { noncurrent_days = 30 }
   }
 }
