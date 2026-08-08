@@ -48,10 +48,18 @@
 - name: Wait for ArgoCD server to be ready
   ansible.builtin.command: >
     kubectl rollout status deployment/argocd-server
-    -n argocd --timeout=5m
+    -n argocd --timeout=2m
+  register: argocd_rollout
+  until: argocd_rollout.rc == 0
+  retries: 10
+  delay: 10
   environment:
     KUBECONFIG: /home/ec2-user/.kube/config
   changed_when: false
+
+- name: Print ArgoCD pod deployment status
+  ansible.builtin.debug:
+    msg: "ArgoCD server rollout status: {{ argocd_rollout.stdout }}"
 
 - name: Get ArgoCD initial admin password
   ansible.builtin.command: >
