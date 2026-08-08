@@ -1,15 +1,15 @@
 name: Ansible Bootstrap
 
 on:
-  workflow_run:
-    workflows: ["Terraform CI/CD"]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
     inputs:
       target_ip:
         description: EC2 public IP (leave blank to auto-fetch from TF outputs)
         required: false
+  workflow_run:
+    workflows: ["Terraform CI/CD"]
+    types: [completed]
+    branches: [main]
 
 jobs:
   ansible:
