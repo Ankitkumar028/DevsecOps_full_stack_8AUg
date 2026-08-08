@@ -71,7 +71,7 @@ jobs:
 
           [k3s_nodes:vars]
           ansible_python_interpreter=/usr/bin/python3
-          ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+          ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ServerAliveInterval=15 -o ServerAliveCountMax=30 -o ConnectTimeout=60'
           EOF
 
       - name: Wait for EC2 SSH to be ready
