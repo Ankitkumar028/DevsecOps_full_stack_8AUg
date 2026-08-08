@@ -26,8 +26,7 @@ on:
         description: "Image digest for provenance"
         value: ${{ jobs.build.outputs.image_digest }}
     secrets:
-      GITHUB_TOKEN:
-        required: true
+      inherit   # automatically passes all secrets including GITHUB_TOKEN
 
 jobs:
   build:
