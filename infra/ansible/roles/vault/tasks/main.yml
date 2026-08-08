@@ -1,0 +1,64 @@
+---
+# roles/vault/tasks/main.yml
+# Installs HashiCorp Vault OSS in dev-mode for learning
+# Switch to HA mode for production multi-node
+
+- name: Create vault namespace
+  ansible.builtin.command:
+    cmd: kubectl create namespace vault
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  register: ns_result
+  failed_when: ns_result.rc != 0 and 'already exists' not in ns_result.stderr
+  changed_when: ns_result.rc == 0
+
+- name: Install Vault OSS via Helm
+  ansible.builtin.command: >
+    helm upgrade --install vault hashicorp/vault
+    --namespace vault
+    --version {{ vault_version }}
+    --set server.dev.enabled=false
+    --set server.standalone.enabled=true
+    --set server.resources.requests.memory=64Mi
+    --set server.resources.limits.memory=256Mi
+    --set server.resources.requests.cpu=50m
+    --set server.resources.limits.cpu=200m
+    --set server.ha.enabled=false
+    --set ui.enabled=true
+    --set ui.serviceType=ClusterIP
+    --set injector.enabled=true
+    --set injector.resources.requests.memory=32Mi
+    --set injector.resources.limits.memory=128Mi
+    --wait --timeout 5m
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  changed_when: true
+
+- name: Wait for Vault to be running
+  ansible.builtin.command: >
+    kubectl rollout status statefulset/vault
+    -n vault --timeout=5m
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  changed_when: false
+
+- name: Copy Vault init script
+  ansible.builtin.copy:
+    dest: /home/ec2-user/vault-init.sh
+    owner: ec2-user
+    mode: '0750'
+    content: |
+      #!/bin/bash
+      # Run once after Vault pod is Running:
+      # bash ~/vault-init.sh
+      set -e
+      export POD=$(kubectl get pods -n vault -l app.kubernetes.io/name=vault -o jsonpath='{.items[0].metadata.name}')
+      echo "Initialising Vault on pod: $POD"
+      kubectl exec -n vault $POD -- vault operator init \
+        -key-shares=1 -key-threshold=1 \
+        -format=json > ~/vault-init-keys.json
+      echo "⚠️  SAVE ~/vault-init-keys.json securely! Do NOT commit it."
+      UNSEAL_KEY=$(cat ~/vault-init-keys.json | jq -r '.unseal_keys_b64[0]')
+      ROOT_TOKEN=$(cat ~/vault-init-keys.json | jq -r '.root_token')
+      kubectl exec -n vault $POD -- vault operator unseal $UNSEAL_KEY
+      echo "✅ Vault is unsealed. Root token stored in ~/vault-init-keys.json"

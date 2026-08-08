@@ -1,0 +1,69 @@
+---
+# Kyverno policy: require pod disruption budget for deployments
+# Ensures graceful handling during node maintenance / chaos experiments
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-pod-disruption-budget
+  annotations:
+    policies.kyverno.io/title: Require PodDisruptionBudget
+    policies.kyverno.io/category: Reliability / SRE
+    policies.kyverno.io/severity: medium
+spec:
+  validationFailureAction: Audit   # Audit first, switch to Enforce when PDBs exist
+  background: true
+
+  rules:
+    - name: require-pdb
+      match:
+        any:
+          - resources:
+              kinds: [Deployment]
+              namespaces: [devsecops]
+              operations: [CREATE, UPDATE]
+      preconditions:
+        all:
+          - key: "{{ request.object.spec.replicas }}"
+            operator: GreaterThan
+            value: 1
+      validate:
+        message: "Deployments with replicas > 1 must have a matching PodDisruptionBudget"
+        deny:
+          conditions:
+            all:
+              - key: "{{ request.object.metadata.name }}"
+                operator: AnyNotIn
+                value: "{{ request.object.metadata.name }}"
+---
+# Kyverno policy: require readinessProbe on all containers
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-readiness-probe
+  annotations:
+    policies.kyverno.io/title: Require Readiness Probe
+    policies.kyverno.io/category: Best Practices / SRE
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Readiness probes prevent traffic routing to pods that are not yet ready,
+      which is critical for zero-downtime deployments.
+spec:
+  validationFailureAction: Enforce
+  background: true
+
+  rules:
+    - name: check-readiness-probe
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [devsecops]
+      validate:
+        message: "All containers must define a readinessProbe"
+        pattern:
+          spec:
+            containers:
+              - readinessProbe:
+                  httpGet:
+                    path: "?*"
+                    port: "?*"

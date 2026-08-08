@@ -1,0 +1,43 @@
+---
+# Phase 6 — Platform Engineering
+# This ArgoCD ApplicationSet auto-generates one ArgoCD Application per service
+# found in the gitops/services/ directory (golden-path pattern).
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: platform-services
+  namespace: argocd
+spec:
+  generators:
+    # Git directory generator — one app per subdirectory under gitops/services/
+    - git:
+        repoURL: https://github.com/REPLACE_ORG/DevsecOps_full_stack_8AUg.git
+        revision: HEAD
+        directories:
+          - path: gitops/services/*
+
+  template:
+    metadata:
+      name: '{{path.basename}}'
+      namespace: argocd
+      annotations:
+        argocd.argoproj.io/sync-wave: "20"
+    spec:
+      project: devsecops
+
+      source:
+        repoURL: https://github.com/REPLACE_ORG/DevsecOps_full_stack_8AUg.git
+        targetRevision: HEAD
+        path: '{{path}}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

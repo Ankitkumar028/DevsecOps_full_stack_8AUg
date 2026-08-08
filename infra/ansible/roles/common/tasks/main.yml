@@ -1,0 +1,105 @@
+---
+# roles/common/tasks/main.yml
+# Base system hardening + essential packages
+
+- name: Set system timezone
+  community.general.timezone:
+    name: "{{ server_timezone }}"
+
+- name: Install essential packages
+  ansible.builtin.yum:
+    name:
+      - git
+      - curl
+      - wget
+      - unzip
+      - jq
+      - htop
+      - vim
+      - nc
+      - net-tools
+      - bash-completion
+      - python3
+      - python3-pip
+      - amazon-cloudwatch-agent   # free — sends logs to CloudWatch (optional)
+    state: present
+    update_cache: true
+
+- name: Configure system-wide ulimits (for k3s + containers)
+  ansible.builtin.copy:
+    dest: /etc/security/limits.d/99-k3s.conf
+    content: |
+      * soft nofile 65536
+      * hard nofile 65536
+      * soft nproc  65536
+      * hard nproc  65536
+    mode: '0644'
+
+- name: Set kernel parameters for Kubernetes networking
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+    sysctl_file: /etc/sysctl.d/99-k3s.conf
+  loop:
+    - { key: "net.bridge.bridge-nf-call-iptables",  value: "1" }
+    - { key: "net.bridge.bridge-nf-call-ip6tables", value: "1" }
+    - { key: "net.ipv4.ip_forward",                 value: "1" }
+    - { key: "vm.swappiness",                        value: "10" }
+    - { key: "fs.inotify.max_user_watches",          value: "524288" }
+    - { key: "fs.inotify.max_user_instances",        value: "512" }
+
+- name: Disable swap (required for Kubernetes)
+  ansible.builtin.command: swapoff -a
+  changed_when: false
+
+- name: Ensure swap stays off across reboots
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^([^#].*\sswap\s.*)$'
+    replace: '# \1'
+
+- name: Load required kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - br_netfilter
+    - overlay
+    - ip_vs
+    - ip_vs_rr
+    - ip_vs_wrr
+    - ip_vs_sh
+    - nf_conntrack
+
+- name: Persist kernel modules across reboots
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k3s.conf
+    content: |
+      br_netfilter
+      overlay
+      ip_vs
+      ip_vs_rr
+      ip_vs_wrr
+      ip_vs_sh
+      nf_conntrack
+    mode: '0644'
+
+- name: Configure journald log rotation
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/journald.conf
+    regexp: "^#?{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    state: present
+  loop:
+    - { key: "SystemMaxUse",     value: "500M" }
+    - { key: "SystemMaxFileSize", value: "50M" }
+    - { key: "Compress",         value: "yes" }
+  notify: Restart journald
+
+handlers:
+  - name: Restart journald
+    ansible.builtin.systemd:
+      name: systemd-journald
+      state: restarted

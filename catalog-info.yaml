@@ -1,0 +1,97 @@
+---
+# Backstage catalog-info.yaml — Software Catalog entry for this platform
+# https://backstage.io/docs/features/software-catalog/descriptor-format
+
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: devsecops-platform
+  title: DevSecOps Full-Stack Platform
+  description: |
+    Production-grade DevSecOps / SRE platform on AWS free tier.
+    Includes GitOps, security scanning, observability, and chaos engineering.
+  tags:
+    - devsecops
+    - sre
+    - platform-engineering
+    - kubernetes
+  links:
+    - url: https://github.com/Ankitkumar028/DevsecOps_full_stack_8AUg
+      title: GitHub Repository
+      icon: github
+    - url: http://EC2_IP:30300
+      title: Grafana Dashboard
+      icon: dashboard
+    - url: http://EC2_IP:8080
+      title: ArgoCD UI
+      icon: web
+  annotations:
+    github.com/project-slug: Ankitkumar028/DevsecOps_full_stack_8AUg
+    backstage.io/techdocs-ref: dir:.
+spec:
+  owner: platform-team
+  domain: platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: devsecops-app
+  title: Sample Microservice
+  description: Flask microservice demonstrating golden-path deployment
+  tags:
+    - python
+    - flask
+    - microservice
+  annotations:
+    github.com/project-slug: Ankitkumar028/DevsecOps_full_stack_8AUg
+    backstage.io/kubernetes-id: devsecops-app
+    prometheus.io/rule: devsecops-app-rules
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: devsecops-platform
+  providesApis:
+    - devsecops-app-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: devsecops-app-api
+  title: Sample Microservice API
+  description: REST API for the sample microservice
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: devsecops-platform
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: DevSecOps Sample API
+      version: 0.1.0
+    paths:
+      /health/live:
+        get:
+          summary: Liveness probe
+          responses:
+            '200':
+              description: Alive
+      /health/ready:
+        get:
+          summary: Readiness probe
+          responses:
+            '200':
+              description: Ready
+      /api/v1/items:
+        get:
+          summary: List items
+          responses:
+            '200':
+              description: List of items
+      /metrics:
+        get:
+          summary: Prometheus metrics
+          responses:
+            '200':
+              description: Prometheus text format

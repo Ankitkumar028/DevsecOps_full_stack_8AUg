@@ -1,0 +1,88 @@
+name: Ansible Bootstrap
+
+on:
+  workflow_run:
+    workflows: ["Terraform CI/CD"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target_ip:
+        description: EC2 public IP (leave blank to auto-fetch from TF outputs)
+        required: false
+
+jobs:
+  ansible:
+    name: Run Ansible Playbook
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    environment: production
+
+    env:
+      AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION:    us-east-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform (to read outputs)
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+
+      - name: Terraform Init (for state read)
+        working-directory: infra/terraform
+        run: terraform init -input=false
+        env:
+          TF_VAR_key_name: dummy
+          TF_VAR_allowed_ssh_cidr: "0.0.0.0/0"
+
+      - name: Get EC2 public IP from Terraform state
+        id: tf_output
+        working-directory: infra/terraform
+        run: |
+          IP="${{ github.event.inputs.target_ip }}"
+          if [ -z "$IP" ]; then
+            IP=$(terraform output -raw instance_public_ip)
+          fi
+          echo "ec2_ip=$IP" >> $GITHUB_OUTPUT
+        env:
+          TF_VAR_key_name: dummy
+          TF_VAR_allowed_ssh_cidr: "0.0.0.0/0"
+
+      - name: Install Ansible
+        run: |
+          pip install ansible ansible-lint boto3
+          ansible-galaxy collection install community.general ansible.posix
+
+      - name: Write SSH private key
+        run: |
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > /tmp/ec2_key.pem
+          chmod 600 /tmp/ec2_key.pem
+
+      - name: Generate dynamic inventory
+        run: |
+          cat > /tmp/inventory.ini << EOF
+          [k3s_nodes]
+          ${{ steps.tf_output.outputs.ec2_ip }} ansible_user=ec2-user ansible_ssh_private_key_file=/tmp/ec2_key.pem
+
+          [k3s_nodes:vars]
+          ansible_python_interpreter=/usr/bin/python3
+          ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+          EOF
+
+      - name: Wait for EC2 SSH to be ready
+        run: |
+          timeout 300 bash -c 'until ssh -i /tmp/ec2_key.pem -o StrictHostKeyChecking=no ec2-user@${{ steps.tf_output.outputs.ec2_ip }} "echo ready" 2>/dev/null; do sleep 10; done'
+
+      - name: Run Ansible playbook
+        working-directory: infra/ansible
+        run: |
+          ansible-playbook -i /tmp/inventory.ini site.yml \
+            --timeout 60 \
+            -v
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f /tmp/ec2_key.pem

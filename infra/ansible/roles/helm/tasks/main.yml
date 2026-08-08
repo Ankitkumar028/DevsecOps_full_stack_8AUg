@@ -1,0 +1,38 @@
+---
+# roles/helm/tasks/main.yml
+
+- name: Download Helm install script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get_helm.sh
+    mode: '0755'
+
+- name: Install Helm {{ helm_version }}
+  ansible.builtin.shell: |
+    DESIRED_VERSION="{{ helm_version }}" bash /tmp/get_helm.sh
+  args:
+    creates: /usr/local/bin/helm
+
+- name: Verify Helm installation
+  ansible.builtin.command: helm version --short
+  register: helm_ver
+  changed_when: false
+
+- name: Print Helm version
+  ansible.builtin.debug:
+    msg: "Helm installed: {{ helm_ver.stdout }}"
+
+- name: Add essential Helm repos
+  ansible.builtin.command: "helm repo add {{ item.name }} {{ item.url }}"
+  loop:
+    - { name: "argo",                  url: "https://argoproj.github.io/argo-helm" }
+    - { name: "prometheus-community",  url: "https://prometheus-community.github.io/helm-charts" }
+    - { name: "grafana",               url: "https://grafana.github.io/helm-charts" }
+    - { name: "hashicorp",             url: "https://helm.releases.hashicorp.com" }
+    - { name: "kyverno",               url: "https://kyverno.github.io/kyverno/" }
+    - { name: "chaos-mesh",            url: "https://charts.chaos-mesh.org" }
+  changed_when: false
+
+- name: Update Helm repo cache
+  ansible.builtin.command: helm repo update
+  changed_when: false

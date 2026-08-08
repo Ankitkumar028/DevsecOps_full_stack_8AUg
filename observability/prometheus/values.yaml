@@ -1,0 +1,193 @@
+# kube-prometheus-stack values — optimised for single free-tier t3.micro node
+# https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+
+# ─── Global ─────────────────────────────────────────────────────────────────
+fullnameOverride: "kube-prom"
+
+# ─── Prometheus ─────────────────────────────────────────────────────────────
+prometheus:
+  prometheusSpec:
+    retention: 7d                    # keep 7 days — free tier disk constraint
+    retentionSize: "8GB"
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi          # within 30GB root volume
+
+    resources:
+      requests:
+        cpu:    100m
+        memory: 256Mi
+      limits:
+        cpu:    500m
+        memory: 512Mi
+
+    # Scrape our app automatically via pod annotations
+    podMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+
+    # Additional scrape configs
+    additionalScrapeConfigs:
+      - job_name: devsecops-app
+        static_configs:
+          - targets: ['devsecops-app.devsecops.svc.cluster.local:5000']
+        metrics_path: /metrics
+        scrape_interval: 15s
+
+    # Load our custom alert rules
+    ruleSelector:
+      matchLabels:
+        prometheus: kube-prometheus
+        role: alert-rules
+
+  # Expose on NodePort for direct access
+  service:
+    type: NodePort
+    nodePort: 30090
+
+# ─── Alertmanager ───────────────────────────────────────────────────────────
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu:    50m
+        memory: 64Mi
+      limits:
+        cpu:    200m
+        memory: 128Mi
+
+  config:
+    global:
+      resolve_timeout: 5m
+      # Slack webhook — set via Secret, not here
+      slack_api_url_secret:
+        name: alertmanager-slack-secret
+        key: webhook_url
+
+    route:
+      group_by: ['alertname', 'severity']
+      group_wait:      30s
+      group_interval:  5m
+      repeat_interval: 4h
+      receiver: slack-platform
+      routes:
+        - match:
+            severity: critical
+          receiver: slack-platform
+          continue: true
+        - match:
+            severity: warning
+          receiver: slack-platform
+
+    receivers:
+      - name: slack-platform
+        slack_configs:
+          - api_url_secret:
+              name: alertmanager-slack-secret
+              key: webhook_url
+            channel: '#alerts'
+            send_resolved: true
+            title: '{{ template "slack.default.title" . }}'
+            text: >-
+              {{ range .Alerts }}
+              *Alert:* {{ .Annotations.summary }}
+              *Severity:* {{ .Labels.severity }}
+              *Description:* {{ .Annotations.description }}
+              *Runbook:* {{ .Annotations.runbook_url }}
+              {{ end }}
+
+    inhibit_rules:
+      - source_match:
+          severity: critical
+        target_match:
+          severity: warning
+        equal: ['alertname', 'instance']
+
+  service:
+    type: NodePort
+    nodePort: 30093
+
+# ─── Grafana ─────────────────────────────────────────────────────────────────
+grafana:
+  adminPassword: ""          # set via GRAFANA_ADMIN_PASSWORD secret in CI
+  adminUser: admin
+
+  resources:
+    requests:
+      cpu:    50m
+      memory: 128Mi
+    limits:
+      cpu:    200m
+      memory: 256Mi
+
+  service:
+    type: NodePort
+    nodePort: 30300
+
+  # Auto-load our dashboard from ConfigMap
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: default
+          orgId: 1
+          folder: DevSecOps
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+
+  dashboardsConfigMaps:
+    default: "grafana-dashboards"
+
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s:30300/"
+    analytics:
+      reporting_enabled: false
+      check_for_updates: false
+    log:
+      mode: console
+      level: warn
+
+# ─── Node Exporter ───────────────────────────────────────────────────────────
+nodeExporter:
+  resources:
+    requests:
+      cpu:    10m
+      memory: 32Mi
+    limits:
+      cpu:    100m
+      memory: 64Mi
+
+# ─── kube-state-metrics ──────────────────────────────────────────────────────
+kubeStateMetrics:
+  resources:
+    requests:
+      cpu:    10m
+      memory: 32Mi
+    limits:
+      cpu:    100m
+      memory: 64Mi
+
+# ─── Disable heavy components not needed on single node ──────────────────────
+kubeEtcd:
+  enabled: false    # k3s uses sqlite, not etcd
+
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeProxy:
+  enabled: false
+
+defaultRules:
+  rules:
+    etcd: false
+    kubeScheduler: false

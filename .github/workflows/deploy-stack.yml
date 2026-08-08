@@ -1,0 +1,81 @@
+name: Deploy Observability Stack
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: deploy
+        type: choice
+        options: [deploy, destroy]
+      skip_monitoring:
+        description: 'Skip monitoring stack (Prometheus/Grafana/Loki)'
+        required: false
+        type: boolean
+        default: false
+      skip_security:
+        description: 'Skip security stack (Kyverno)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  deploy-stack:
+    name: Deploy Full Stack
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION:    us-east-1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+          terraform_wrapper: false
+
+      - name: Get EC2 IP from Terraform
+        id: tf_output
+        working-directory: infra/terraform
+        run: |
+          terraform init -input=false
+          echo "ec2_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
+        env:
+          TF_VAR_key_name: dummy
+          TF_VAR_allowed_ssh_cidr: "0.0.0.0/0"
+
+      - name: Write SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > /tmp/ec2_key.pem
+          chmod 600 /tmp/ec2_key.pem
+
+      - name: Wait for SSH
+        run: |
+          timeout 120 bash -c 'until ssh -i /tmp/ec2_key.pem -o StrictHostKeyChecking=no ec2-user@${{ steps.tf_output.outputs.ec2_ip }} "echo ok" 2>/dev/null; do sleep 10; done'
+
+      - name: Copy scripts and configs to EC2
+        run: |
+          IP=${{ steps.tf_output.outputs.ec2_ip }}
+          scp -i /tmp/ec2_key.pem -o StrictHostKeyChecking=no -r \
+            scripts/ observability/ policies/ gitops/ \
+            ec2-user@$IP:/home/ec2-user/devsecops/
+
+      - name: Deploy stack via SSH
+        run: |
+          IP=${{ steps.tf_output.outputs.ec2_ip }}
+          ARGS=""
+          [[ "${{ inputs.skip_monitoring }}" == "true" ]] && ARGS="$ARGS --skip-monitoring"
+          [[ "${{ inputs.skip_security }}"  == "true" ]] && ARGS="$ARGS --skip-security"
+
+          ssh -i /tmp/ec2_key.pem -o StrictHostKeyChecking=no ec2-user@$IP \
+            "cd /home/ec2-user/devsecops && bash scripts/deploy-stack.sh $ARGS"
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f /tmp/ec2_key.pem

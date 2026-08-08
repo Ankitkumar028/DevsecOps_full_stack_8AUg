@@ -1,0 +1,24 @@
+---
+# chaos/cpu-stress-experiment.yaml
+# Chaos Mesh — stresses CPU on the app pod for 3 minutes
+# Tests: NodeHighCPU alert, HPA behaviour (if enabled), response degradation
+
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: app-cpu-stress
+  namespace: devsecops
+  annotations:
+    experiment.description: "100% CPU on 1 core for 3 min — tests NodeHighCPU alert + app behaviour"
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - devsecops
+    labelSelectors:
+      app.kubernetes.io/name: app
+  stressors:
+    cpu:
+      workers: 1
+      load: 100      # percentage
+  duration: "3m"

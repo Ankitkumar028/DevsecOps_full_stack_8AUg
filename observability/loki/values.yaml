@@ -1,0 +1,97 @@
+# Loki + Promtail values — log aggregation for k3s single-node
+# Uses filesystem storage (no S3 cost) with retention policy
+
+loki:
+  auth_enabled: false    # single-tenant mode
+
+  commonConfig:
+    replication_factor: 1
+
+  storage:
+    type: filesystem
+
+  limits_config:
+    retention_period: 168h    # 7 days — matches Prometheus retention
+    ingestion_rate_mb: 4
+    ingestion_burst_size_mb: 6
+    max_entries_limit_per_query: 5000
+
+  schema_config:
+    configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+  storage_config:
+    tsdb_shipper:
+      active_index_directory: /var/loki/index
+      cache_location: /var/loki/index_cache
+    filesystem:
+      directory: /var/loki/chunks
+
+  compactor:
+    retention_enabled: true
+    delete_request_store: filesystem
+
+  server:
+    http_listen_port: 3100
+    grpc_listen_port: 9095
+
+  resources:
+    requests:
+      cpu:    50m
+      memory: 128Mi
+    limits:
+      cpu:    200m
+      memory: 256Mi
+
+  persistence:
+    enabled: true
+    size: 8Gi
+
+  service:
+    type: ClusterIP
+    port: 3100
+
+# Promtail — scrapes all pod logs from the node
+promtail:
+  enabled: true
+
+  config:
+    clients:
+      - url: http://loki:3100/loki/api/v1/push
+
+    scrape_configs:
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+        pipeline_stages:
+          - docker: {}
+          - labeldrop:
+              - filename
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true|"
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+            target_label: app
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+
+  resources:
+    requests:
+      cpu:    20m
+      memory: 64Mi
+    limits:
+      cpu:    100m
+      memory: 128Mi
+
+  # Tolerate all nodes (single node)
+  tolerations:
+    - operator: Exists

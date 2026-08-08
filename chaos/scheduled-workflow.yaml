@@ -1,0 +1,27 @@
+---
+# chaos/scheduled-workflow.yaml
+# Chaos Mesh Workflow — runs pod-kill on a schedule (every 30 min during business hours)
+# Validates continuous self-healing without manual intervention
+
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: scheduled-pod-kill
+  namespace: devsecops
+  annotations:
+    experiment.description: "Automated pod-kill every 30min — continuous self-healing validation"
+spec:
+  schedule: "*/30 9-17 * * 1-5"   # every 30min, 9am–5pm, Mon–Fri
+  concurrencyPolicy: Forbid
+  historyLimit: 5
+  type: PodChaos
+
+  podChaos:
+    action: pod-kill
+    mode: one
+    selector:
+      namespaces:
+        - devsecops
+      labelSelectors:
+        app.kubernetes.io/name: app
+    duration: "30s"
