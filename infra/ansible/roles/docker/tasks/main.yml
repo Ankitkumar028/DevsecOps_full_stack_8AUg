@@ -1,25 +1,9 @@
 ---
 # roles/docker/tasks/main.yml
-- name: Install Docker prerequisites
+- name: Install Docker (Amazon Linux 2023 native)
   ansible.builtin.yum:
     name:
-      - yum-utils
-      - device-mapper-persistent-data
-      - lvm2
-    state: present
-
-- name: Add Docker CE repo
-  ansible.builtin.command:
-    cmd: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    creates: /etc/yum.repos.d/docker-ce.repo
-
-- name: Install Docker CE
-  ansible.builtin.yum:
-    name:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
-      - docker-compose-plugin
+      - docker
     state: present
 
 - name: Configure Docker daemon (log rotation + security)
