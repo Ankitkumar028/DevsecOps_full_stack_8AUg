@@ -31,8 +31,8 @@
     --set controller.resources.limits.memory=512Mi
     --set server.resources.requests.memory=64Mi
     --set server.resources.limits.memory=256Mi
-    --set repoServer.resources.requests.memory=64Mi
-    --set repoServer.resources.limits.memory=256Mi
+    --set repoServer.resources.requests.memory=128Mi
+    --set repoServer.resources.limits.memory=512Mi
     --set applicationSet.resources.requests.memory=32Mi
     --set applicationSet.resources.limits.memory=128Mi
     --set dex.enabled=false
