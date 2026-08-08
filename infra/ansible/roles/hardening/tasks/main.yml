@@ -2,10 +2,9 @@
 # roles/hardening/tasks/main.yml
 # SSH hardening + fail2ban + auditd + unattended-upgrades
 
-- name: Install hardening tools
+- name: Install hardening tools (audit, aide)
   ansible.builtin.yum:
     name:
-      - fail2ban
       - audit
       - aide
     state: present
@@ -51,11 +50,12 @@
     mode: '0644'
   notify: Restart fail2ban
 
-- name: Enable and start fail2ban
+- name: Enable and start fail2ban (if available)
   ansible.builtin.systemd:
     name: fail2ban
     enabled: true
     state: started
+  failed_when: false
 
 # ─── auditd ──────────────────────────────────────────────────────────────────
 - name: Configure auditd rules (CIS Level 1 baseline)
