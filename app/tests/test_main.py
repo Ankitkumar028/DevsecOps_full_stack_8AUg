@@ -1,6 +1,11 @@
 """
 app/tests/test_main.py — Unit tests for the Flask microservice
 """
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import pytest
 from main import app as flask_app
 

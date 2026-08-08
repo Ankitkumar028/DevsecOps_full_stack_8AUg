@@ -40,7 +40,9 @@ jobs:
         run: ruff check .
 
       - name: Run unit tests
-        run: pytest tests/ -v --tb=short --cov=app --cov-report=xml
+        env:
+          PYTHONPATH: .
+        run: pytest tests/ -v --tb=short --cov=. --cov-report=xml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
