@@ -1,0 +1,23 @@
+---
+# chaos/pod-kill-experiment.yaml
+# Chaos Mesh — randomly kills the app pod every 5 minutes (Phase 5)
+# Simulates pod failure to test self-healing and alert firing
+
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: app-pod-kill
+  namespace: devsecops
+  annotations:
+    experiment.description: "Kill app pod randomly — tests k3s self-healing + PodCrashLooping alert"
+spec:
+  action: pod-kill
+  mode: one               # kill exactly one pod at a time
+  selector:
+    namespaces:
+      - devsecops
+    labelSelectors:
+      app.kubernetes.io/name: app
+
+  # Run once, then pause — use Workflow for scheduling
+  duration: "30s"

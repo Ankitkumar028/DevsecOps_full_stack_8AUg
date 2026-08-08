@@ -1,0 +1,14 @@
+---
+# infra/ansible/vars/main.yml
+
+k3s_version: "v1.29.4+k3s1"
+helm_version: "v3.15.2"
+argocd_version: "6.7.18"      # Helm chart version
+vault_version: "0.28.0"       # Helm chart version
+
+# Timezone
+server_timezone: "UTC"
+
+# Docker daemon settings
+docker_log_max_size: "10m"
+docker_log_max_file: "3"

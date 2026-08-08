@@ -1,0 +1,24 @@
+# Gitleaks configuration
+# Prevents common secret patterns from being committed
+
+[allowlist]
+  description = "Allowlist for known false positives"
+  regexes = [
+    '''REPLACE_WITH_EC2_IP''',
+    '''REPLACE_ORG''',
+    '''CHANGEME''',
+    '''YOUR_KEY''',
+    '''YOUR\.PUBLIC\.IP''',
+  ]
+
+[[rules]]
+  id          = "aws-access-key"
+  description = "AWS Access Key ID"
+  regex       = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+  tags        = ["key", "AWS"]
+
+[[rules]]
+  id          = "aws-secret-key"
+  description = "AWS Secret Access Key"
+  regex       = '''(?i)aws_secret_access_key\s*=\s*['\"]?[A-Za-z0-9/+=]{40}['\"]?'''
+  tags        = ["key", "AWS"]

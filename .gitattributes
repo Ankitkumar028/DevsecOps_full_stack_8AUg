@@ -1,0 +1,18 @@
+# Normalize line endings to LF on commit (works cross-platform)
+* text=auto eol=lf
+
+# Force binary — no line ending conversion
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pem binary
+*.p12 binary
+
+# Ensure shell scripts always LF
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows batch files — keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf

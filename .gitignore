@@ -1,0 +1,73 @@
+# .gitignore for DevSecOps Platform
+
+# ─── Terraform ──────────────────────────────
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+terraform.tfvars          # never commit secrets!
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+crash.log
+crash.*.log
+
+# ─── Ansible ────────────────────────────────
+*.retry
+infra/ansible/inventory.ini.local
+
+# ─── Python ─────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.env
+.env.*
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.ruff_cache/
+
+# ─── Docker ─────────────────────────────────
+.docker/
+
+# ─── Secrets / Keys ─────────────────────────
+*.pem
+*.key
+*.p12
+*.pfx
+.vault-token
+vault-token
+*secret*
+*password*
+*credential*
+
+# ─── IDE / OS ────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Logs ───────────────────────────────────
+*.log
+logs/
+
+# ─── ZAP ─────────────────────────────────────
+report_html.html
+report_json.json
+report_xml.xml

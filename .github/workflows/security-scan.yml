@@ -1,0 +1,90 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/terraform/**'
+      - 'policies/**'
+      - 'charts/**'
+  schedule:
+    # Run nightly at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  # ──────────────────────────────────────────
+  #  Terraform IaC Scanning
+  # ──────────────────────────────────────────
+  iac-scan:
+    name: IaC Scan (tfsec + Checkov)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: infra/terraform
+          soft_fail: false
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra/terraform
+          framework: terraform
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+          soft_fail: false
+          skip_check: CKV_AWS_8   # example skip — remove if you address all
+
+      - name: Upload Checkov SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov-results.sarif
+
+  # ──────────────────────────────────────────
+  #  DAST — OWASP ZAP baseline scan
+  # ──────────────────────────────────────────
+  dast:
+    name: DAST (OWASP ZAP Baseline)
+    runs-on: ubuntu-latest
+    # Only run if the app is reachable (needs EC2 to be up)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: ${{ secrets.APP_URL }}   # e.g. http://EC2_IP:5000
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-I'                # informational — don't fail on alerts
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: report_html.html
+
+  # ──────────────────────────────────────────
+  #  Dependency audit — pip-audit
+  # ──────────────────────────────────────────
+  dependency-audit:
+    name: Dependency Audit (pip-audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit -r app/requirements.txt --desc on

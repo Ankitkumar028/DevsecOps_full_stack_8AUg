@@ -1,0 +1,43 @@
+---
+# roles/k3s_server/tasks/main.yml
+- name: Download k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/k3s_install.sh
+    mode: '0755'
+
+- name: Install k3s single-node server
+  ansible.builtin.shell: |
+    INSTALL_K3S_VERSION="{{ k3s_version }}" \
+    K3S_KUBECONFIG_MODE="644" \
+    sh /tmp/k3s_install.sh --disable traefik
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: Enable and start k3s service
+  ansible.builtin.systemd:
+    name: k3s
+    enabled: true
+    state: started
+
+- name: Wait for k3s to be ready
+  ansible.builtin.command: k3s kubectl get nodes
+  register: result
+  until: result.rc == 0
+  retries: 20
+  delay: 10
+
+- name: Copy kubeconfig to ec2-user home
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: /home/ec2-user/.kube/config
+    owner: ec2-user
+    group: ec2-user
+    mode: '0600'
+    remote_src: true
+
+- name: Set KUBECONFIG in .bashrc
+  ansible.builtin.lineinfile:
+    path: /home/ec2-user/.bashrc
+    line: 'export KUBECONFIG=/home/ec2-user/.kube/config'
+    state: present

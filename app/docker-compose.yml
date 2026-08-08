@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: devsecops-app:local
+    container_name: devsecops-app
+    ports:
+      - "5000:5000"
+    environment:
+      APP_ENV: dev
+      APP_VERSION: "0.1.0-local"
+      FLASK_DEBUG: "false"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:5000/health/live')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

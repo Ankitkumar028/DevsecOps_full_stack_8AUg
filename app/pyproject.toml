@@ -1,0 +1,34 @@
+# ruff linter configuration
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["app"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "B",   # flake8-bugbear
+  "S",   # flake8-bandit (security)
+  "UP",  # pyupgrade
+]
+ignore = ["S101"]  # allow assert in tests
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B"]
+
+# pytest configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "-v --tb=short"
+
+# coverage
+[tool.coverage.run]
+source  = ["app"]
+omit    = ["tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+show_missing  = true
+fail_under    = 70

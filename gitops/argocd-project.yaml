@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
+---
+# Install ArgoCD (run once, or let Ansible handle it)
+# kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+#
+# Then apply this project + app-of-apps:
+# kubectl apply -f gitops/argocd-project.yaml
+# kubectl apply -f gitops/apps/
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: devsecops
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: "DevSecOps platform project"
+
+  sourceRepos:
+    - "https://github.com/REPLACE_ORG/DevsecOps_full_stack_8AUg.git"
+    - "https://charts.helm.sh/stable"
+    - "https://prometheus-community.github.io/helm-charts"
+    - "https://argoproj.github.io/argo-helm"
+
+  destinations:
+    - namespace: devsecops
+      server: https://kubernetes.default.svc
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+    - namespace: vault
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: "rbac.authorization.k8s.io"
+      kind: ClusterRole
+    - group: "rbac.authorization.k8s.io"
+      kind: ClusterRoleBinding
+    - group: "kyverno.io"
+      kind: ClusterPolicy
+
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota   # prevent accidental quota locks
+
+  orphanedResources:
+    warn: true

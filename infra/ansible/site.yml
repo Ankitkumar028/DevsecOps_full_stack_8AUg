@@ -1,0 +1,19 @@
+---
+# infra/ansible/site.yml
+# Master playbook — runs all roles in order
+- name: Bootstrap k3s node
+  hosts: k3s_nodes
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - vars/main.yml
+
+  roles:
+    - role: common          # base packages, timezone, ulimits
+    - role: docker          # Docker CE install + daemon config
+    - role: k3s_server      # k3s single-node install
+    - role: helm            # Helm CLI install
+    - role: argocd          # ArgoCD install via Helm
+    - role: vault           # Vault OSS install
+    - role: hardening       # SSH hardening, fail2ban, auditd

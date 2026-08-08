@@ -1,0 +1,12 @@
+apiVersion: v2
+name: app
+description: Helm chart for the DevSecOps sample microservice
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - devsecops
+  - microservice
+  - flask
+maintainers:
+  - name: platform-team
