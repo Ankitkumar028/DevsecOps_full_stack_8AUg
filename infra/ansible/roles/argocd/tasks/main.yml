@@ -27,7 +27,6 @@
     --set applicationSet.resources.limits.memory=128Mi
     --set dex.enabled=false
     --set notifications.enabled=false
-    --wait --timeout 5m
   environment:
     KUBECONFIG: /home/ec2-user/.kube/config
   changed_when: true

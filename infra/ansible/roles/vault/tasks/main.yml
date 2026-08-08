@@ -29,7 +29,6 @@
     --set injector.enabled=true
     --set injector.resources.requests.memory=32Mi
     --set injector.resources.limits.memory=128Mi
-    --wait --timeout 5m
   environment:
     KUBECONFIG: /home/ec2-user/.kube/config
   changed_when: true

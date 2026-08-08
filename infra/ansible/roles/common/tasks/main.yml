@@ -75,15 +75,22 @@
     - { key: "fs.inotify.max_user_watches",          value: "524288" }
     - { key: "fs.inotify.max_user_instances",        value: "512" }
 
-- name: Disable swap (required for Kubernetes)
-  ansible.builtin.command: swapoff -a
-  changed_when: false
+- name: Create 1GB swapfile (safety buffer for 1GB RAM EC2 node)
+  ansible.builtin.shell: |
+    if [ ! -f /swapfile ]; then
+      dd if=/dev/zero of=/swapfile bs=1M count=1024
+      chmod 600 /swapfile
+      mkswap /swapfile
+      swapon /swapfile
+    fi
+  args:
+    creates: /swapfile
 
-- name: Ensure swap stays off across reboots
-  ansible.builtin.replace:
+- name: Ensure swapfile persists in fstab
+  ansible.builtin.lineinfile:
     path: /etc/fstab
-    regexp: '^([^#].*\sswap\s.*)$'
-    replace: '# \1'
+    line: '/swapfile swap swap defaults 0 0'
+    state: present
 
 - name: Configure journald log rotation
   ansible.builtin.lineinfile:
