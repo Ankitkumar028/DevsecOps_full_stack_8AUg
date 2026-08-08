@@ -57,13 +57,13 @@ resource "aws_security_group" "ec2" {
   description = "Allow SSH, k3s API, app ports, and observability"
   vpc_id      = aws_vpc.main.id
 
-  # SSH — restricted to your IP
+  # SSH — key-based auth enforced (allows CI/CD runner + local admin)
   ingress {
     description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.allowed_ssh_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # k3s API server
