@@ -12,6 +12,16 @@
   failed_when: ns_result.rc != 0 and 'already exists' not in ns_result.stderr
   changed_when: ns_result.rc == 0
 
+- name: Clear stuck pending Helm release if previous run was interrupted
+  ansible.builtin.shell: |
+    STATUS=$(helm status vault -n vault -o json 2>/dev/null | jq -r '.info.status' || echo "none")
+    if [ "$STATUS" = "pending-install" ] || [ "$STATUS" = "pending-upgrade" ]; then
+      helm uninstall vault -n vault || true
+    fi
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  changed_when: false
+
 - name: Install Vault OSS via Helm
   ansible.builtin.command: >
     helm upgrade --install vault hashicorp/vault
