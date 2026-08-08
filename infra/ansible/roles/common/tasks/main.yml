@@ -98,8 +98,3 @@
     - { key: "Compress",         value: "yes" }
   notify: Restart journald
 
-handlers:
-  - name: Restart journald
-    ansible.builtin.systemd:
-      name: systemd-journald
-      state: restarted

@@ -1,0 +1,16 @@
+---
+# roles/hardening/handlers/main.yml
+- name: Restart SSH
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted
+
+- name: Restart fail2ban
+  ansible.builtin.systemd:
+    name: fail2ban
+    state: restarted
+
+- name: Restart auditd
+  ansible.builtin.service:
+    name: auditd
+    state: restarted

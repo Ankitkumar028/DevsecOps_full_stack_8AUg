@@ -92,18 +92,3 @@
     - avahi-daemon
   failed_when: false   # not all services exist on all AMIs
 
-handlers:
-  - name: Restart SSH
-    ansible.builtin.systemd:
-      name: sshd
-      state: restarted
-
-  - name: Restart fail2ban
-    ansible.builtin.systemd:
-      name: fail2ban
-      state: restarted
-
-  - name: Restart auditd
-    ansible.builtin.service:
-      name: auditd
-      state: restarted
