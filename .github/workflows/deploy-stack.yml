@@ -52,12 +52,14 @@ jobs:
 
       - name: Write SSH key
         run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > /tmp/ec2_key.pem
+          cat << 'EOF' > /tmp/ec2_key.pem
+          ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          EOF
           chmod 600 /tmp/ec2_key.pem
 
       - name: Wait for SSH
         run: |
-          timeout 120 bash -c 'until ssh -i /tmp/ec2_key.pem -o StrictHostKeyChecking=no ec2-user@${{ steps.tf_output.outputs.ec2_ip }} "echo ok" 2>/dev/null; do sleep 10; done'
+          ssh -i /tmp/ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${{ steps.tf_output.outputs.ec2_ip }} "echo ok"
 
       - name: Copy scripts and configs to EC2
         run: |

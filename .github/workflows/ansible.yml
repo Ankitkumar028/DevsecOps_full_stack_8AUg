@@ -58,7 +58,9 @@ jobs:
 
       - name: Write SSH private key
         run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > /tmp/ec2_key.pem
+          cat << 'EOF' > /tmp/ec2_key.pem
+          ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          EOF
           chmod 600 /tmp/ec2_key.pem
 
       - name: Generate dynamic inventory
@@ -74,7 +76,7 @@ jobs:
 
       - name: Wait for EC2 SSH to be ready
         run: |
-          timeout 300 bash -c 'until ssh -i /tmp/ec2_key.pem -o StrictHostKeyChecking=no ec2-user@${{ steps.tf_output.outputs.ec2_ip }} "echo ready" 2>/dev/null; do sleep 10; done'
+          ssh -i /tmp/ec2_key.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 ec2-user@${{ steps.tf_output.outputs.ec2_ip }} "echo ready"
 
       - name: Run Ansible playbook
         working-directory: infra/ansible
