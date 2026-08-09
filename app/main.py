@@ -7,7 +7,7 @@ import logging
 import os
 import time
 
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, render_template, request
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 # ─── Structured logging ───────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ def index():
     return render_template(
         "index.html",
         version=os.getenv("APP_VERSION", "0.1.0"),
-        environment=os.getenv("APP_ENV", "dev")
+        environment=os.getenv("APP_ENV", "dev"),
     )
 
 
