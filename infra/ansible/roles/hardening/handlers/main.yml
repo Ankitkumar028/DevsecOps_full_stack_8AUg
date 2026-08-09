@@ -12,6 +12,5 @@
   failed_when: false
 
 - name: Restart auditd
-  ansible.builtin.service:
-    name: auditd
-    state: restarted
+  ansible.builtin.command: /sbin/service auditd restart
+  failed_when: false
