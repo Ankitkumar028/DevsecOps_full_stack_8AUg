@@ -10,10 +10,6 @@ import time
 from flask import Flask, jsonify, render_template, request
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
-# ─── FAKE AWS CREDENTIALS FOR TESTING GITLEAKS ────────────────────────────────
-AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
-AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-
 # ─── Structured logging ───────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
