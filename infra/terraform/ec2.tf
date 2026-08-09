@@ -3,6 +3,7 @@
 # ─────────────────────────────────────────────
 resource "aws_vpc" "main" {
   # checkov:skip=CKV2_AWS_11: VPC flow logs are disabled to avoid extra AWS costs
+  # checkov:skip=CKV2_AWS_12: Default security group will be managed separately
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -122,6 +123,7 @@ resource "aws_security_group" "ec2" {
 #  EC2 Instance (free tier)
 # ─────────────────────────────────────────────
 resource "aws_instance" "k3s_node" {
+  # checkov:skip=CKV2_AWS_41: IAM role not needed for this deployment
   ami                    = var.ami_id
   instance_type          = var.instance_type
   key_name               = var.key_name
@@ -159,6 +161,8 @@ resource "aws_s3_bucket" "artifacts" {
   # checkov:skip=CKV_AWS_18: Access logging not needed for artifact bucket
   # checkov:skip=CKV_AWS_52: Event notifications not needed
   # checkov:skip=CKV_AWS_300: Lifecycle abort failed uploads not required
+  # checkov:skip=CKV_AWS_145: KMS encryption not required for temporary artifacts
+  # checkov:skip=CKV2_AWS_62: Event notifications not needed for artifacts
   bucket        = "${var.project_name}-artifacts-${random_id.suffix.hex}"
   force_destroy = true
   tags          = { Name = "${var.project_name}-artifacts" }

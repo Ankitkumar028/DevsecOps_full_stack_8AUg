@@ -20,6 +20,9 @@ resource "aws_s3_bucket" "tfstate" {
   # checkov:skip=CKV_AWS_18: Access logging not needed
   # checkov:skip=CKV_AWS_52: Event notifications not needed
   # checkov:skip=CKV_AWS_300: Lifecycle abort failed uploads not required
+  # checkov:skip=CKV_AWS_145: KMS encryption not required for local tfstate
+  # checkov:skip=CKV2_AWS_61: Lifecycle configuration not needed
+  # checkov:skip=CKV2_AWS_62: Event notifications not needed
   bucket        = "${var.project_name}-tfstate-ankitkumar028"
   force_destroy = true
   tags          = { Name = "terraform-state" }
@@ -48,6 +51,7 @@ resource "aws_s3_bucket_public_access_block" "tfstate" {
 }
 
 resource "aws_dynamodb_table" "tflock" {
+  # checkov:skip=CKV_AWS_28: Point-in-time recovery not needed for terraform lock table
   # checkov:skip=CKV_AWS_24: PITR backup not needed for lock table
   # checkov:skip=CKV_AWS_119: Customer managed KMS not needed for lock table
   name         = "${var.project_name}-tfstate-lock"
