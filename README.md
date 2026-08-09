@@ -42,7 +42,7 @@ k3s is a CNCF-certified lightweight Kubernetes distro that runs on a single EC2 
 .
 ├── infra/
 │   ├── terraform/          # VPC, EC2, S3 backend, security groups
-│   └── ansible/            # k3s + docker bootstrap playbooks
+│   └── ansible/            # OS Hardening, k3s, Docker, GitOps Bootstrap
 ├── app/                    # Sample Python microservice (Flask)
 ├── charts/                 # Helm chart for the app
 ├── gitops/                 # ArgoCD Application manifests
@@ -51,131 +51,85 @@ k3s is a CNCF-certified lightweight Kubernetes distro that runs on a single EC2 
 ├── chaos/                  # Chaos Mesh experiment manifests
 ├── .github/workflows/      # ci.yml, security-scan.yml, terraform.yml
 ├── docs/
+│   ├── Implementation_Report.md # Detailed step-by-step project report
 │   ├── runbooks/           # Incident runbooks
-│   ├── postmortems/        # Postmortem templates + filled examples
 │   └── assets/             # Architecture diagrams
 └── README.md
 ```
 
 ---
 
-## 🗺️ Build Phases
-
-Each phase is a demonstrable milestone with its own README section and Git tag.
-
-| Phase | Focus | Key Tools | Tag |
-|-------|-------|-----------|-----|
-| **1** | IaC + Basic CI/CD | Terraform, GitHub Actions, Docker Compose | `v0.1` |
-| **2** | Container Orchestration | k3s, Helm, ArgoCD (GitOps) | `v0.2` |
-| **3** | DevSecOps Pipeline | Trivy, Gitleaks, tfsec, Checkov, Semgrep, ZAP, Kyverno | `v0.3` |
-| **4** | Observability & SRE | Prometheus, Grafana, Loki, Alertmanager, SLOs | `v0.4` |
-| **5** | Chaos & Resilience | Chaos Mesh, incident runbooks, postmortems | `v0.5` |
-| **6** | Platform Layer | Golden-path reusable workflows, cookiecutter template | `v0.6` |
-
----
-
-## 💰 Cost-Safety Guardrails
-
-> **Target: $0/month on AWS Free Tier**
-
-- ✅ Set AWS Budget alerts at **$1** and **$5** on day one
-- ✅ Single public subnet — **no NAT Gateway** (NAT GW = #1 free-tier trap)
-- ✅ No EKS (use k3s), no RDS Multi-AZ, no unattached Elastic IPs
-- ✅ `terraform destroy` when not working, `terraform apply` to resume
-- ✅ All state (Helm values, ArgoCD apps, dashboards) lives in Git → rebuilding is free
-
----
-
 ## 🛠️ Tool Stack by Discipline
 
 ### DevOps
-- **GitHub Actions** — unlimited minutes on public repos
-- **Terraform** — IaC for AWS resources
-- **Ansible** — EC2 bootstrapping (k3s, Docker)
-- **Docker + Helm + ArgoCD** — containerization & GitOps
+- **GitHub Actions** — CI/CD automation and artifact building
+- **Terraform** — Infrastructure as Code (IaC) for AWS resources
+- **Ansible** — Configuration Management (Hardening, k3s, fully automated cluster bootstrapping)
+- **Docker + Helm + ArgoCD** — Containerization & GitOps deployment
 
-### DevSecOps
-- **Trivy / Grype** — container image & IaC vulnerability scanning
-- **Gitleaks** — secrets scanning (pre-commit + CI)
-- **tfsec / Checkov** — Terraform security scanning
+### DevSecOps (Shift-Left)
+- **Trivy** — Container image vulnerability scanning
+- **Gitleaks** — Hard-coded secrets scanning (CI pipeline blocker)
+- **Checkov** — Terraform security and compliance scanning
 - **Semgrep** — SAST (static analysis)
 - **OWASP ZAP** — DAST baseline scan
-- **OPA / Kyverno** — policy-as-code admission control
-- **Vault OSS** — secrets management
+- **Kyverno** — Kubernetes policy-as-code admission control
+- **Vault OSS** — Secrets management
 
-### Platform Engineering
-- Reusable GitHub Actions workflows (golden path)
-- Cookiecutter service template
-- Self-service Helm charts
-- Internal developer portal (Backstage — optional)
-
-### SRE
-- **Prometheus + Grafana** — metrics & SLO dashboards
-- **Loki + Promtail** — log aggregation
-- **Alertmanager** → Slack webhook
-- **Chaos Mesh** — pod-kill / latency-injection experiments
-- Runbooks + postmortem docs for each induced failure
+### SRE & Observability
+- **Prometheus + Grafana** — Metrics & SLO dashboards
+- **Loki + Promtail** — Log aggregation
+- **Alertmanager** — Automated alerting
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Fully Automated)
+
+This repository is designed to be 100% hands-free after the initial deployment commands.
 
 ### Prerequisites
 - AWS account (free tier)
 - Terraform ≥ 1.6
 - Ansible ≥ 2.14
-- kubectl + Helm ≥ 3.12
 - GitHub account (for Actions + GHCR)
 
-### 1. Bootstrap AWS backend
+### 1. Provision Infrastructure (Terraform)
 ```bash
+# Setup remote state backend
 cd infra/terraform/bootstrap
 terraform init && terraform apply
-```
 
-### 2. Provision EC2 + networking
-```bash
-cd infra/terraform
+# Provision Network & EC2
+cd ../
 cp terraform.tfvars.example terraform.tfvars
-# edit terraform.tfvars with your SSH key path
 terraform init && terraform apply
 ```
 
-### 3. Install k3s + Docker via Ansible
+### 2. Configure & Deploy Everything (Ansible)
+Because of the custom `bootstrap_apps` Ansible role, the following single command will completely harden the OS, install Kubernetes, install ArgoCD, and deploy the entire application and observability stack via GitOps:
+
 ```bash
-cd infra/ansible
+cd ../ansible
 ansible-playbook -i inventory.ini site.yml
 ```
 
-### 4. Deploy app via ArgoCD
-```bash
-kubectl apply -f gitops/argocd-install.yaml
-kubectl apply -f gitops/apps/
-```
+Within 5 minutes, your DevSecOps dashboard will be live at: `http://<EC2_IP>:30000`!
 
 ---
 
-## 📖 What I Learned — Per Phase
+## 📖 Project Showcase Achievements
 
-> *(Fill in as you complete each phase)*
+### Phase 1: Infrastructure Security
+- Engineered a zero-cost AWS environment utilizing strict Security Groups and EBS optimization.
+- Resolved and formally documented dozens of Checkov compliance alerts, successfully integrating the Checkov SARIF reports natively into the GitHub Security tab.
 
-### Phase 1 — IaC + Basic CI/CD
-- ...
+### Phase 2: Complete CI/CD Pipeline Automation
+- Built a GitHub Actions pipeline that executes linting, PyTest, Trivy image scanning, and Helm chart value updates.
+- **Proof of Security:** Intentionally tested the pipeline by injecting fake AWS credentials; Gitleaks successfully caught the vulnerability, blocked the Docker build, and prevented a production deployment.
 
-### Phase 2 — Container Orchestration
-- ...
-
-### Phase 3 — DevSecOps Pipeline
-- ...
-
-### Phase 4 — Observability & SRE
-- ...
-
-### Phase 5 — Chaos & Resilience
-- ...
-
-### Phase 6 — Platform Layer
-- ...
+### Phase 3: "Hands-Free" GitOps Disaster Recovery
+- Wrote a custom Ansible `bootstrap_apps` role. If the EC2 server is destroyed, running the Ansible playbook automatically re-clones the repository, executes the deployment scripts, and provisions ArgoCD.
+- ArgoCD instantly detects the Git repository and restores all applications, Kyverno policies, and Grafana dashboards without manual SSH intervention.
 
 ---
 
