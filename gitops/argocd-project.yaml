@@ -21,7 +21,7 @@ spec:
   description: "DevSecOps platform project"
 
   sourceRepos:
-    - "https://github.com/REPLACE_ORG/DevsecOps_full_stack_8AUg.git"
+    - "https://github.com/Ankitkumar028/DevsecOps_full_stack_8AUg.git"
     - "https://charts.helm.sh/stable"
     - "https://prometheus-community.github.io/helm-charts"
     - "https://argoproj.github.io/argo-helm"
