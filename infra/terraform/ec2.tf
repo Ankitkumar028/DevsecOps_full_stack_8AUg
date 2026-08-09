@@ -93,22 +93,13 @@ resource "aws_security_group" "ec2" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Grafana
+  # Kubernetes NodePort range (for accessing ArgoCD, Grafana, App directly)
   ingress {
-    description = "Grafana"
-    from_port   = 3000
-    to_port     = 3000
+    description = "NodePorts"
+    from_port   = 30000
+    to_port     = 32767
     protocol    = "tcp"
-    cidr_blocks = [var.allowed_ssh_cidr]
-  }
-
-  # Prometheus
-  ingress {
-    description = "Prometheus"
-    from_port   = 9090
-    to_port     = 9090
-    protocol    = "tcp"
-    cidr_blocks = [var.allowed_ssh_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
