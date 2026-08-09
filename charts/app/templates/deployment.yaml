@@ -13,8 +13,7 @@ spec:
     metadata:
       annotations:
         {{- toYaml .Values.podAnnotations | nindent 8 }}
-        # Force rollout on config change
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+
       labels:
         {{- include "app.labels" . | nindent 8 }}
     spec:
