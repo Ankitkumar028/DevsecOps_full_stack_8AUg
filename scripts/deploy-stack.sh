@@ -39,6 +39,13 @@ for ns in devsecops monitoring vault kyverno-system; do
 done
 log "Namespaces ready"
 
+# ── Helm Repositories ────────────────────────────────────────────────────────
+log "Adding Helm repositories..."
+helm repo add kyverno https://kyverno.github.io/kyverno/ 2>/dev/null || true
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts 2>/dev/null || true
+helm repo add grafana https://grafana.github.io/helm-charts 2>/dev/null || true
+helm repo update
+
 # ── Kyverno (security policies) ─────────────────────────────────────────────
 if [[ "$SKIP_SECURITY" == "false" ]]; then
   log "Installing Kyverno..."
