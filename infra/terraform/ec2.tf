@@ -13,6 +13,7 @@ resource "aws_vpc" "main" {
 #  Public Subnet (no NAT Gateway — free tier!)
 # ─────────────────────────────────────────────
 resource "aws_subnet" "public" {
+  # checkov:skip=CKV_AWS_130: Public subnet requires public IPs for external access
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidr
   availability_zone       = data.aws_availability_zones.available.names[0]
@@ -63,7 +64,7 @@ resource "aws_security_group" "ec2" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.allowed_ssh_cidr]
   }
 
   # k3s API server
@@ -77,6 +78,7 @@ resource "aws_security_group" "ec2" {
 
   # HTTP — app + ArgoCD UI
   ingress {
+    # checkov:skip=CKV_AWS_190: Public web server requires port 80 access from anywhere
     description = "HTTP"
     from_port   = 80
     to_port     = 80
@@ -99,10 +101,12 @@ resource "aws_security_group" "ec2" {
     from_port   = 30000
     to_port     = 32767
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.allowed_ssh_cidr]
   }
 
   egress {
+    # checkov:skip=CKV_AWS_382: Egress to 0.0.0.0/0 is required for fetching external dependencies
+    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -121,6 +125,12 @@ resource "aws_instance" "k3s_node" {
   key_name               = var.key_name
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.ec2.id]
+  ebs_optimized          = true
+  monitoring             = true
+
+  metadata_options {
+    http_tokens = "required"
+  }
 
   # 30 GB gp2 root volume — within free-tier limits
   root_block_device {
