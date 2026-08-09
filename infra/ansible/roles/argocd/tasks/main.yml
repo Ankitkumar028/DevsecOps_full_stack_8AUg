@@ -27,6 +27,8 @@
     --version {{ argocd_version }}
     --set server.insecure=true
     --set configs.params."server\.insecure"=true
+    --set server.service.type=NodePort
+    --set server.service.nodePortHttp=30080
     --set controller.resources.requests.memory=128Mi
     --set controller.resources.limits.memory=512Mi
     --set server.resources.requests.memory=64Mi
