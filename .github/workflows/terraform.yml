@@ -55,19 +55,13 @@ jobs:
       - name: Bootstrap — Import existing resources (idempotent)
         working-directory: infra/terraform/bootstrap
         run: |
-          # Import S3 bucket if it already exists
-          if aws s3api head-bucket --bucket devsecops-tfstate-ankitkumar028 2>/dev/null; then
-            echo "📦 S3 bucket exists, importing..."
-            terraform import aws_s3_bucket.tfstate devsecops-tfstate-ankitkumar028 || true
-            terraform import aws_s3_bucket_versioning.tfstate devsecops-tfstate-ankitkumar028 || true
-            terraform import aws_s3_bucket_server_side_encryption_configuration.tfstate devsecops-tfstate-ankitkumar028 || true
-            terraform import aws_s3_bucket_public_access_block.tfstate devsecops-tfstate-ankitkumar028 || true
-          fi
-          # Import DynamoDB table if it already exists
-          if aws dynamodb describe-table --table-name devsecops-tfstate-lock 2>/dev/null; then
-            echo "🔒 DynamoDB table exists, importing..."
-            terraform import aws_dynamodb_table.tflock devsecops-tfstate-lock || true
-          fi
+          echo "🔄 Importing any pre-existing bootstrap resources..."
+          terraform import aws_s3_bucket.tfstate devsecops-tfstate-ankitkumar028 2>/dev/null || true
+          terraform import aws_s3_bucket_versioning.tfstate devsecops-tfstate-ankitkumar028 2>/dev/null || true
+          terraform import aws_s3_bucket_server_side_encryption_configuration.tfstate devsecops-tfstate-ankitkumar028 2>/dev/null || true
+          terraform import aws_s3_bucket_public_access_block.tfstate devsecops-tfstate-ankitkumar028 2>/dev/null || true
+          terraform import aws_dynamodb_table.tflock devsecops-tfstate-lock 2>/dev/null || true
+          echo "✅ Import step complete"
 
       - name: Bootstrap — Apply (create S3 bucket + DynamoDB lock table)
         working-directory: infra/terraform/bootstrap
