@@ -21,7 +21,7 @@ GHCR Registry  (container images)
 ArgoCD  (GitOps sync)
     │
     ▼
-EC2 t3.micro — free tier  (single-node k3s cluster)
+EC2 t3.medium  (single-node k3s cluster)
     ├── App Pods          (sample microservice)
     ├── Observability     (Prometheus, Grafana, Loki)
     └── Security Layer    (Vault OSS, OPA / Kyverno)
