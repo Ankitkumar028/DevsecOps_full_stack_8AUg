@@ -70,6 +70,11 @@ if [[ "$SKIP_MONITORING" == "false" ]]; then
     sleep 5
   fi
 
+  # Create Grafana dashboard ConfigMap first (prevent deadlock since Grafana mounts it)
+  kubectl create configmap grafana-dashboards \
+    --from-file=slo-dashboard.json=observability/grafana/dashboards/slo-dashboard.json \
+    -n monitoring --dry-run=client -o yaml | kubectl apply -f -
+
   log "Installing kube-prometheus-stack..."
   helm upgrade --install kube-prom prometheus-community/kube-prometheus-stack \
     -n monitoring \
@@ -82,11 +87,6 @@ if [[ "$SKIP_MONITORING" == "false" ]]; then
     -f observability/loki/values.yaml \
     --set promtail.enabled=true \
     --wait --timeout 5m
-
-  # Create Grafana dashboard ConfigMap from JSON
-  kubectl create configmap grafana-dashboards \
-    --from-file=slo-dashboard.json=observability/grafana/dashboards/slo-dashboard.json \
-    -n monitoring --dry-run=client -o yaml | kubectl apply -f -
 
   log "Monitoring stack deployed"
   echo ""
