@@ -62,6 +62,14 @@ fi
 
 # ── Monitoring Stack ─────────────────────────────────────────────────────────
 if [[ "$SKIP_MONITORING" == "false" ]]; then
+  
+  # Auto-recover if a previous installation got interrupted (broken pipe)
+  if helm status kube-prom -n monitoring 2>/dev/null | grep -q "pending-"; then
+    warn "Detected stuck kube-prom installation. Cleaning up..."
+    helm uninstall kube-prom -n monitoring --wait || true
+    sleep 5
+  fi
+
   log "Installing kube-prometheus-stack..."
   helm upgrade --install kube-prom prometheus-community/kube-prometheus-stack \
     -n monitoring \
