@@ -4,7 +4,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/REPLACE_ORG/devsecops-full-stack_8aug/app  # updated by CI
+  repository: ghcr.io/Ankitkumar028/devsecops-full-stack_8aug/app  # updated by CI
   pullPolicy: IfNotPresent
   tag: sha-9daa1e2
 
