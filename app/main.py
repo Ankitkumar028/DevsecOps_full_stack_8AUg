@@ -7,7 +7,7 @@ import logging
 import os
 import time
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 # ─── Structured logging ───────────────────────────────────────────────────────
@@ -54,6 +54,17 @@ def record_metrics(response):
 # ─── Routes ──────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
+    """Serve the interactive DevSecOps architecture dashboard."""
+    return render_template(
+        "index.html",
+        version=os.getenv("APP_VERSION", "0.1.0"),
+        environment=os.getenv("APP_ENV", "dev")
+    )
+
+
+@app.route("/api/v1/info")
+def info():
+    """Original JSON response for testing routing."""
     return jsonify(
         message="🚀 DevSecOps Platform — Sample Microservice",
         version=os.getenv("APP_VERSION", "0.1.0"),
