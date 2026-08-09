@@ -32,9 +32,16 @@ def test_readiness(client):
     assert "uptime_seconds" in data
 
 
-# ─── Index ────────────────────────────────────────────────────────────────────
+# ─── Index & API Info ────────────────────────────────────────────────────────
 def test_index(client):
     r = client.get("/")
+    assert r.status_code == 200
+    # Root now returns HTML, not JSON
+    assert b"DevSecOps Architecture" in r.data
+
+
+def test_api_info(client):
+    r = client.get("/api/v1/info")
     assert r.status_code == 200
     assert "DevSecOps" in r.get_json()["message"]
 
