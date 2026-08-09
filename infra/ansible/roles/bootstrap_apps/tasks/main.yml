@@ -1,0 +1,48 @@
+---
+# infra/ansible/roles/bootstrap_apps/tasks/main.yml
+
+- name: Clean up previous clone if it exists
+  ansible.builtin.file:
+    path: /home/ec2-user/DevsecOps_full_stack_8AUg
+    state: absent
+
+- name: Clone DevSecOps repository
+  ansible.builtin.git:
+    repo: https://github.com/Ankitkumar028/DevsecOps_full_stack_8AUg.git
+    dest: /home/ec2-user/DevsecOps_full_stack_8AUg
+    version: main
+    force: yes
+  become_user: ec2-user
+
+- name: Deploy observability and security stack (deploy-stack.sh)
+  ansible.builtin.command: bash scripts/deploy-stack.sh
+  args:
+    chdir: /home/ec2-user/DevsecOps_full_stack_8AUg
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  become_user: ec2-user
+  ignore_errors: yes
+
+- name: Deploy ArgoCD Project
+  ansible.builtin.command: kubectl apply -f gitops/argocd-project.yaml
+  args:
+    chdir: /home/ec2-user/DevsecOps_full_stack_8AUg
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  become_user: ec2-user
+
+- name: Deploy DevSecOps App (ArgoCD Application)
+  ansible.builtin.command: kubectl apply -f gitops/apps/devsecops-app.yaml
+  args:
+    chdir: /home/ec2-user/DevsecOps_full_stack_8AUg
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  become_user: ec2-user
+
+- name: Deploy Platform Services (ArgoCD ApplicationSet)
+  ansible.builtin.command: kubectl apply -f gitops/applicationset.yaml
+  args:
+    chdir: /home/ec2-user/DevsecOps_full_stack_8AUg
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  become_user: ec2-user

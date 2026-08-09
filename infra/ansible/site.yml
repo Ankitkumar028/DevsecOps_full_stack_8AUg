@@ -17,3 +17,4 @@
     - role: argocd          # ArgoCD install via Helm
     - role: vault           # Vault OSS install
     - role: hardening       # SSH hardening, fail2ban, auditd
+    - role: bootstrap_apps  # Automates GitOps & observability deployment
