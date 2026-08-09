@@ -11,7 +11,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/REPLACE_ORG/DevsecOps_full_stack_8AUg.git
+    repoURL: https://github.com/Ankitkumar028/DevsecOps_full_stack_8AUg.git
     targetRevision: HEAD
     path: charts/app
     helm:

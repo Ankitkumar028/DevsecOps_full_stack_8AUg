@@ -12,7 +12,7 @@ spec:
   generators:
     # Git directory generator — one app per subdirectory under gitops/services/
     - git:
-        repoURL: https://github.com/REPLACE_ORG/DevsecOps_full_stack_8AUg.git
+        repoURL: https://github.com/Ankitkumar028/DevsecOps_full_stack_8AUg.git
         revision: HEAD
         directories:
           - path: gitops/services/*
@@ -27,7 +27,7 @@ spec:
       project: devsecops
 
       source:
-        repoURL: https://github.com/REPLACE_ORG/DevsecOps_full_stack_8AUg.git
+        repoURL: https://github.com/Ankitkumar028/DevsecOps_full_stack_8AUg.git
         targetRevision: HEAD
         path: '{{path}}'
 
