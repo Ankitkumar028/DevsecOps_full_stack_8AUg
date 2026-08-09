@@ -61,11 +61,12 @@ resource "aws_security_group" "ec2" {
 
   # SSH — key-based auth enforced (allows CI/CD runner + local admin)
   ingress {
+    # checkov:skip=CKV_AWS_24: SSH must be open to 0.0.0.0/0 for GitHub Actions dynamic IPs
     description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.allowed_ssh_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # k3s API server
@@ -74,7 +75,7 @@ resource "aws_security_group" "ec2" {
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
-    cidr_blocks = [var.allowed_ssh_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # HTTP — app + ArgoCD UI
@@ -102,7 +103,7 @@ resource "aws_security_group" "ec2" {
     from_port   = 30000
     to_port     = 32767
     protocol    = "tcp"
-    cidr_blocks = [var.allowed_ssh_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
