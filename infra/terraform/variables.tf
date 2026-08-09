@@ -29,9 +29,9 @@ variable "public_subnet_cidr" {
 }
 
 variable "instance_type" {
-  description = "EC2 instance type — keep t2.micro or t3.micro for free tier"
+  description = "EC2 instance type — upgraded to t3.medium (2 vCPU, 4GB RAM) for high performance"
   type        = string
-  default     = "t3.micro"
+  default     = "t3.medium"
 }
 
 variable "key_name" {
