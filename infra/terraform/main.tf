@@ -11,7 +11,7 @@ terraform {
   # Remote state — S3 backend + DynamoDB locking
   # Provisioned separately via infra/terraform/bootstrap/
   backend "s3" {
-    bucket         = "devsecops-platform-tfstate"
+    bucket         = "devsecops-tfstate-ankitkumar028"
     key            = "core/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "devsecops-tfstate-lock"

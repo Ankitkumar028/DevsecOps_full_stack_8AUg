@@ -16,7 +16,7 @@ variable "aws_region" { default = "us-east-1" }
 variable "project_name" { default = "devsecops" }
 
 resource "aws_s3_bucket" "tfstate" {
-  bucket        = "${var.project_name}-platform-tfstate"
+  bucket        = "${var.project_name}-tfstate-ankitkumar028"
   force_destroy = true
   tags          = { Name = "terraform-state" }
 }
