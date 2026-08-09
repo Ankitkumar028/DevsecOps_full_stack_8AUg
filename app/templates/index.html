@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSecOps Architecture Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="glow-orb red"></div>
+        <div class="glow-orb blue"></div>
+        <div class="glow-orb purple"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="version-badge">v{{ version }} ({{ environment }})</div>
+            <h1>DevSecOps Architecture</h1>
+            <p class="subtitle">A visual breakdown of your fully automated, secure, and observable infrastructure.</p>
+        </header>
+
+        <main class="grid">
+            <!-- Terraform Card -->
+            <div class="card" style="--delay: 0.1s">
+                <div class="card-icon" style="color: #5c4ee5;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                </div>
+                <h2>Infrastructure (Terraform)</h2>
+                <p>Automated provisioning of AWS EC2 instances, Security Groups, and S3 backends for state management.</p>
+                <div class="tags">
+                    <span class="tag">AWS EC2</span>
+                    <span class="tag">VPC</span>
+                    <span class="tag">tfsec</span>
+                </div>
+            </div>
+
+            <!-- Ansible Card -->
+            <div class="card" style="--delay: 0.2s">
+                <div class="card-icon" style="color: #000000;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h2>Configuration (Ansible)</h2>
+                <p>Idempotent playbooks that harden the OS, install K3s, and bootstrap secrets securely via HashiCorp Vault.</p>
+                <div class="tags">
+                    <span class="tag">K3s</span>
+                    <span class="tag">Vault</span>
+                    <span class="tag">Hardening</span>
+                </div>
+            </div>
+
+            <!-- Security Card -->
+            <div class="card" style="--delay: 0.3s">
+                <div class="card-icon" style="color: #e34c26;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                </div>
+                <h2>Security (Kyverno)</h2>
+                <p>Strict admission control policies enforcing non-root users, resource limits, and health probes for all pods.</p>
+                <div class="tags">
+                    <span class="tag">Kyverno</span>
+                    <span class="tag">Policies</span>
+                    <span class="tag">Admission</span>
+                </div>
+            </div>
+
+            <!-- GitOps Card -->
+            <div class="card" style="--delay: 0.4s">
+                <div class="card-icon" style="color: #ef7b4d;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><line x1="6" y1="9" x2="6" y2="21"></line></svg>
+                </div>
+                <h2>GitOps (ArgoCD)</h2>
+                <p>Continuous Deployment pipeline automatically syncing GitHub commits directly into the Kubernetes cluster.</p>
+                <div class="tags">
+                    <span class="tag">ArgoCD</span>
+                    <span class="tag">Sync</span>
+                    <span class="tag">Helm</span>
+                </div>
+            </div>
+
+            <!-- Observability Card -->
+            <div class="card" style="--delay: 0.5s">
+                <div class="card-icon" style="color: #f46800;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M5 20V10m6 10V4m6 16v-8"/></svg>
+                </div>
+                <h2>Observability (Grafana)</h2>
+                <p>Full-stack monitoring with Prometheus metrics and Loki logs visualized in real-time dashboards.</p>
+                <div class="tags">
+                    <span class="tag">Prometheus</span>
+                    <span class="tag">Grafana</span>
+                    <span class="tag">Loki</span>
+                </div>
+            </div>
+            
+            <!-- Python App Card -->
+            <div class="card" style="--delay: 0.6s">
+                <div class="card-icon" style="color: #3776ab;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 16 12 12 8"></polyline><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                </div>
+                <h2>Application (Python)</h2>
+                <p>You are looking at it! A high-performance Python microservice serving this UI and exposing its own metrics.</p>
+                <div class="tags">
+                    <span class="tag">Flask</span>
+                    <span class="tag">Python</span>
+                    <span class="tag">Microservice</span>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <a href="/api/v1/info" class="api-btn">Test API Endpoint →</a>
+        </footer>
+    </div>
+</body>
+</html>
