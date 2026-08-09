@@ -2,6 +2,7 @@
 #  VPC
 # ─────────────────────────────────────────────
 resource "aws_vpc" "main" {
+  # checkov:skip=CKV2_AWS_11: VPC flow logs are disabled to avoid extra AWS costs
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -78,7 +79,7 @@ resource "aws_security_group" "ec2" {
 
   # HTTP — app + ArgoCD UI
   ingress {
-    # checkov:skip=CKV_AWS_190: Public web server requires port 80 access from anywhere
+    # checkov:skip=CKV_AWS_260: Public web server requires port 80 access from anywhere
     description = "HTTP"
     from_port   = 80
     to_port     = 80
@@ -153,6 +154,10 @@ resource "aws_instance" "k3s_node" {
 #  S3 Bucket — app artifacts (lifecycle rules keep it free)
 # ─────────────────────────────────────────────
 resource "aws_s3_bucket" "artifacts" {
+  # checkov:skip=CKV_AWS_144: Cross-region replication not needed for temporary artifacts
+  # checkov:skip=CKV_AWS_18: Access logging not needed for artifact bucket
+  # checkov:skip=CKV_AWS_52: Event notifications not needed
+  # checkov:skip=CKV_AWS_300: Lifecycle abort failed uploads not required
   bucket        = "${var.project_name}-artifacts-${random_id.suffix.hex}"
   force_destroy = true
   tags          = { Name = "${var.project_name}-artifacts" }

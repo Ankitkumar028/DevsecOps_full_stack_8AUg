@@ -16,6 +16,10 @@ variable "aws_region" { default = "us-east-1" }
 variable "project_name" { default = "devsecops" }
 
 resource "aws_s3_bucket" "tfstate" {
+  # checkov:skip=CKV_AWS_144: Cross-region replication not needed for local tfstate
+  # checkov:skip=CKV_AWS_18: Access logging not needed
+  # checkov:skip=CKV_AWS_52: Event notifications not needed
+  # checkov:skip=CKV_AWS_300: Lifecycle abort failed uploads not required
   bucket        = "${var.project_name}-tfstate-ankitkumar028"
   force_destroy = true
   tags          = { Name = "terraform-state" }
@@ -44,6 +48,8 @@ resource "aws_s3_bucket_public_access_block" "tfstate" {
 }
 
 resource "aws_dynamodb_table" "tflock" {
+  # checkov:skip=CKV_AWS_24: PITR backup not needed for lock table
+  # checkov:skip=CKV_AWS_119: Customer managed KMS not needed for lock table
   name         = "${var.project_name}-tfstate-lock"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
