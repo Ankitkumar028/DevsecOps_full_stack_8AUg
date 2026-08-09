@@ -17,7 +17,7 @@ variable "project_name"  { default = "devsecops" }
 
 resource "aws_s3_bucket" "tfstate" {
   bucket        = "${var.project_name}-tfstate-${random_id.s.hex}"
-  force_destroy = false
+  force_destroy = true
   tags          = { Name = "terraform-state" }
 }
 
