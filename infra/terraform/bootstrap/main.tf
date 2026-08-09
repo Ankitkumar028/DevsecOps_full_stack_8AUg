@@ -12,8 +12,8 @@ terraform {
 
 provider "aws" { region = var.aws_region }
 
-variable "aws_region"    { default = "us-east-1" }
-variable "project_name"  { default = "devsecops" }
+variable "aws_region" { default = "us-east-1" }
+variable "project_name" { default = "devsecops" }
 
 resource "aws_s3_bucket" "tfstate" {
   bucket        = "${var.project_name}-tfstate-${random_id.s.hex}"
@@ -45,7 +45,7 @@ resource "aws_s3_bucket_public_access_block" "tfstate" {
 
 resource "aws_dynamodb_table" "tflock" {
   name         = "${var.project_name}-tfstate-lock"
-  billing_mode = "PAY_PER_REQUEST"  # free tier — charges only on use
+  billing_mode = "PAY_PER_REQUEST" # free tier — charges only on use
   hash_key     = "LockID"
 
   attribute {
@@ -59,4 +59,4 @@ resource "aws_dynamodb_table" "tflock" {
 resource "random_id" "s" { byte_length = 4 }
 
 output "state_bucket_name" { value = aws_s3_bucket.tfstate.bucket }
-output "lock_table_name"   { value = aws_dynamodb_table.tflock.name }
+output "lock_table_name" { value = aws_dynamodb_table.tflock.name }

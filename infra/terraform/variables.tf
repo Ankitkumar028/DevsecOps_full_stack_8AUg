@@ -48,5 +48,5 @@ variable "allowed_ssh_cidr" {
 variable "ami_id" {
   description = "AMI ID — defaults to Amazon Linux 2023 in us-east-1"
   type        = string
-  default     = "ami-0182f373e66f89c85"   # Amazon Linux 2023 us-east-1 (update as needed)
+  default     = "ami-0182f373e66f89c85" # Amazon Linux 2023 us-east-1 (update as needed)
 }
