@@ -1,0 +1,15 @@
+10000	PASS	Ignore X-Frame-Options Header Missing
+10001	WARN	Ignore Cookie without SameSite Attribute
+10002	WARN	Ignore X-Content-Type-Options Header Missing
+20000	WARN	Ignore Anti-CSRF tokens checked
+20001	WARN	Ignore Incomplete or No Cache-control Header Set
+20018	WARN	Ignore Server Leaks Information via "X-Powered-By" HTTP Response Header
+30001	WARN	Ignore Buffer Overflow
+30003	WARN	Ignore Path Traversal
+40000	WARN	Ignore Insufficient Authentication
+40001	WARN	Ignore Insufficient Authorization
+40002	WARN	Ignore Broken Authentication
+40003	WARN	Ignore Session Fixation
+50000	WARN	Ignore Z-Scanning Rule
+90001	WARN	Ignore Informational Content
+90011	WARN	Ignore Charset Mismatch
