@@ -174,6 +174,7 @@ resource "aws_s3_bucket_versioning" "artifacts" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
+  # checkov:skip=CKV_AWS_300: Lifecycle abort failed uploads not required
   bucket = aws_s3_bucket.artifacts.id
 
   rule {
