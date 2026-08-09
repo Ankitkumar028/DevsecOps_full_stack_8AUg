@@ -6,7 +6,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/ankitkumar028/devsecops_full_stack_8aug/app  # updated by CI
   pullPolicy: IfNotPresent
-  tag: sha-daba7f8
+  tag: sha-746e6c9
 
 imagePullSecrets:
   - name: ghcr-secret
